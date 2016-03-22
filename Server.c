@@ -11,19 +11,27 @@
 int main(void)
 {
     int connfd = 0;
+    struct sockaddr_in dest_addr;
     struct sockaddr_in serv_addr;
 
     printf("Socket retrieve success\n");
 
-    memset(&serv_addr, '0', sizeof(serv_addr));
+    memset(&dest_addr, '0', sizeof(dest_addr));
+    memset(&serv_addr, '0', sizeof(dest_addr));
+
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(4444);
+    inet_aton("224.2.2.2", &dest_addr.sin_addr);
 
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(4444);
-    inet_aton("224.2.2.2", &serv_addr.sin_addr);
+    serv_addr.sin_port = htons(8001);
+    serv_addr.sin_addr.s_addr = inet_addr("10.80.5.3");
+    bind(connfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
 
     while(1)
     {
     	connfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        bind(connfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
 
     	// File opening part
         FILE *fp = fopen("somefile.som","r");
@@ -42,7 +50,7 @@ int main(void)
             if(nread > 0)
             {
                 printf("Sending \n");
-                sendto(connfd, buff, nread, 0, &serv_addr, sizeof(serv_addr));
+                sendto(connfd, buff, nread, 0, &dest_addr, sizeof(dest_addr));
             }
 
             // Error handling
@@ -55,7 +63,7 @@ int main(void)
                 break;
             }
 
-            usleep(1 * 1000);
+            usleep(150 * 1000);
 
         }
 
